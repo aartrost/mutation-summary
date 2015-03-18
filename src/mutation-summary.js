@@ -1390,6 +1390,8 @@ var MutationSummary = (function () {
     function MutationSummary(opts) {
         var _this = this;
         this.connected = false;
+        this.suspended = false;
+        this.queue = [];
         this.options = MutationSummary.validateOptions(opts);
         this.observerOptions = MutationSummary.createObserverOptions(this.options.queries);
         this.root = this.options.rootNode;
@@ -1413,6 +1415,12 @@ var MutationSummary = (function () {
         }
 
         this.observer = new MutationObserverCtor(function (mutations) {
+
+            if(_this.suspended){
+                _this.queue = _this.queue.concat(mutations);
+                return;
+            }
+
             _this.observerCallback(mutations);
         });
 
@@ -1641,9 +1649,21 @@ var MutationSummary = (function () {
         if (!this.connected)
             throw Error('Not connected');
 
-        var summaries = this.createSummaries(this.observer.takeRecords());
+        this.queue = this.queue.concat(this.observer.takeRecords());
+        var summaries = this.createSummaries(this.queue);
+        this.queue = [];
+        
         return this.changesToReport(summaries) ? summaries : undefined;
     };
+
+    MutationSummary.prototype.suspendDelivery = function(){
+        this.suspended = true;
+    }
+
+    MutationSummary.prototype.resumeDelivery = function(){
+        this.suspended = false;
+        return this.takeSummaries();
+    }
 
     MutationSummary.prototype.disconnect = function () {
         var summaries = this.takeSummaries();
@@ -1651,6 +1671,7 @@ var MutationSummary = (function () {
         this.connected = false;
         return summaries;
     };
+
     MutationSummary.NodeMap = NodeMap;
     MutationSummary.parseElementFilter = Selector.parseSelectors;
 
