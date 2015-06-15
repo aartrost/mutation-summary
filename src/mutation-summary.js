@@ -543,7 +543,8 @@ var MutationProjection = (function () {
         var result = [];
         for (var i = 0; i < nodes.length; i++) {
             var target = nodes[i];
-            if (2 /* STAYED_IN */ !== this.treeChanges.reachabilityChange(target))
+
+            if ([2 /* STAYED_IN */, 5 /* EXITED */].indexOf(this.treeChanges.reachabilityChange(target)) === -1)
                 continue;
 
             var change = this.treeChanges.get(target);
