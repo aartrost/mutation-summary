@@ -1646,12 +1646,18 @@ var MutationSummary = (function () {
         this.checkpointQueryValidators();
     };
 
+    MutationSummary.prototype.getQueue = function () {
+        if (!this.connected)
+            throw Error('Not connected');
+
+        return this.queue = this.queue.concat(this.observer.takeRecords());
+    };
+
     MutationSummary.prototype.takeSummaries = function () {
         if (!this.connected)
             throw Error('Not connected');
 
-        this.queue = this.queue.concat(this.observer.takeRecords());
-        var summaries = this.createSummaries(this.queue);
+        var summaries = this.createSummaries(this.getQueue());
         this.queue = [];
         
         return this.changesToReport(summaries) ? summaries : undefined;
