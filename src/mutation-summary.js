@@ -1415,7 +1415,19 @@ var MutationSummary = (function () {
             });
         }
 
+        var i;
+
         this.observer = new MutationObserverCtor(function (mutations) {
+
+            for(i = mutations.length - 1; i >= 0; i--) {
+                if(
+                    mutations[i].target !== undefined && 
+                    mutations[i].target.nodeType === 1 && 
+                    mutations[i].target.hasAttribute('data-ignore-changes')
+                ) {
+                    mutations.splice(i, 1);
+                }
+            }
 
             if(_this.suspended){
                 _this.queue = _this.queue.concat(mutations);
